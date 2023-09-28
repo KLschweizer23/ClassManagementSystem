@@ -1,0 +1,130 @@
+<!-- This is the partial to manage class -->
+<div class="w-100 p-2">
+    <div class="w-100 m-0 mb-5 mt-3 p-0 text-center">
+        <h3>Manage Class</h3>
+    </div>
+    <div class="m-0 mb-2 p-0">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 form-group">
+                    <label for="gradeLevel">Grade Level:</label>
+                    <select name="gradeLevel" id="gradeLevel" class="form-control" onchange="searchClass()">
+                        <% for( let i = 0; i < gradeLevels.length; i++ ) { %>
+                            <option value="<%= gradeLevels[i].id %>"><%= gradeLevels[i].gradeLevel %></option>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="section">Section name:</label>
+                    <input type="text" class="form-control" id="section" name="section" oninput="searchClass()">
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="adviser">Adviser:</label>
+                    <input type="text" class="form-control" id="adviser" name="adviser" disabled>
+                </div>
+                <div class="col-md-3 form-group my-auto">
+                    <button class="btn btn-primary btn-block" onclick="getTeachers('adviser', false)">Select Adviser</button>
+                    <button class="btn btn-success btn-block" onclick="addClass()">Add Class</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <table class="table table-hover"> 
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Grade Level</th>
+                <th scope="col">Section</th>
+                <th scope="col">Adviser</th>
+                <th scope="col">No. of Students</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="tbodyClass">
+        </tbody>
+    </table>
+    <script>
+
+        $(() => {
+            searchClass()
+        })
+
+        async function searchClass(){
+            var gradeLevel = $('#gradeLevel').val()
+            var section = $('#section').val()
+            $.post('/search-class', { gradeLevel, section }).done(async (response) => {
+                populateClassTable(await response.dataResult)
+            })
+        }
+
+        function populateClassTable(data){
+            var tbodyClass = document.getElementById('tbodyClass')
+            tbodyClass.innerHTML = ""
+            for(var i = 0; i < data.length; i++){
+                var row = `
+                    <tr>
+                        <td>${ i + 1 }</td>
+                        <td>${ data[i].grade.gradeLevel }</td>
+                        <td>${ data[i].section }</td>
+                        <td>${ data[i].adviser.name }</td>
+                        <td>${ data[i].students.length }</td>
+                        <td class="m-0 p-0">
+                            <div class="row w-100 m-0 p-0">
+                                <div class="col-md-6 m-0 p-0">
+                                    <button class="btn btn-block btn-primary" onclick="viewClass(${ data[i].id })">Subjects</button>
+                                </div>
+                                <div class="col-md-6 m-0 p-0">
+                                    <button class="btn btn-block btn-success" onclick="viewStudents(${ data[i].id })">Students</button>
+                                </div>
+                            </div>
+                            <button class="btn btn-block btn-danger" onclick="deleteClass(${ data[i].id })">Delete</button>    
+                        </td>
+                    </tr>
+                `
+                tbodyClass.innerHTML += row
+            }
+        }
+
+        async function addClass(){
+            document.getElementById('adviser').disabled = false
+
+            var gradeLevelId = $('#gradeLevel').val()
+            var section = $('#section').val()
+            var adviser = $('#adviser').val()
+
+            if(section.trim() == "" || adviser.trim() == ""){
+                showErrorMessageAlert("Fill up all the details!")
+                document.getElementById('adviser').disabled = true
+                return
+            }
+            $.post('/add-class', { gradeLevelId, section, adviser }).done(() => {
+                document.getElementById('adviser').disabled = true
+                clearClassFields()
+            })
+        }
+
+        function clearClassFields(){
+            $('#gradeLevel').val("1")
+            $('#section').val("")
+            $('#adviser').val("")
+            searchClass()
+        }
+
+        // This function is to delete the classroom in the backend by sending a request
+        async function deleteClass(id){
+            showYesCancelAlert("Are you sure you want to remove this class? By removing this class you will also remove all the subjects and activities related to this class, You cannot undo once the data is deleted from the database.", async () => {
+                $.post('/delete-class/' + id).done(async () => {
+                    searchClass()
+                })
+            })
+        }
+        // This function is just for redirection
+        function viewClass(id){
+            window.location.href = '/admin/class/' + id
+        }
+
+        function viewStudents(id){
+            window.location.href = '/admin/class-students/' + id
+        }
+    </script>
+</div>

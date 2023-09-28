@@ -1,0 +1,176 @@
+<!-- 
+
+    This is the Class Grades Page to display the Prediction of Grades
+
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- This includes the partials which are different links and sources -->
+    <%- include('../partials/head') %>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- <script src="https://cdn.plot.ly/plotly-2.25.2.min.js" charset="utf-8"></script> -->
+    <title>Class Grades Prediction</title>
+</head>
+<body>
+    <style>
+        .data{
+            display: none;
+            transition: display 0.5s ease;
+        }
+
+        .show{
+            display: table-row;
+        }
+        .customRow{
+            cursor: pointer;
+        }
+    </style>
+    <!-- This includes the navigation bar -->
+    <%- include('../partials/navbar') %>
+    <div class="mt-5"></div>
+    <div class="w-100 m-0 p-0 text-center">
+        <h1>Prediction of Student Grades</h1>
+    </div>
+    <div class="table-responsive-lg">
+        <table class="table table-hover w-75 mx-auto"> 
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Student Name</th>
+                    <th scope="col">Predicted Grade</th>
+                    <th scope="col">Remarks</th>
+                </tr>
+            </thead>
+            <!-- 
+
+                studentsData is a data from the back end passed to the front end
+                studentsData is an object that contains a lot of data
+                To see the data, copy this code below
+                <_%_= JSON.stringify(studentsData) %_>
+                NOTE: remove the underscore(_)
+
+                Below contains a for loop to iterate every subject of this classroom
+                To display the contents of every students belonged in a classrom to the table
+
+             -->
+            <tbody>
+                <% for( let i = 0; i < studentsData.students.length; i++ ) { %>
+                    <% var student = studentsData.students[i] %>
+                    <tr class="<%= (student.grades.final.remarks) ? "table-success" : "table-danger" %> customRow" id="<%= student.id %>" data-value="<%= JSON.stringify(student) %>" onclick="processGraph(id)">
+                        <td><%= i + 1 %></td>
+                        <td><%= student.lastName + ", " + student.firstName %></td>
+                        <td><%= student.grades.final.finalGrade %>%</td>
+                        <td><%= (student.grades.final.remarks) ? "The student is doing very well" : "The student might have troubles in his/her studies" %></td>
+                    </tr>
+                    <tr class="data">
+                        <td colspan="4">
+                            <!-- <p class="p">This graph represents the progress of this student through a line graph that shows the student's grades per quarter.</p> -->
+                            <div id="chart<%= student.id %>"></div>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <div class="w-75 m-0 p-0 mx-auto text-center mt-5">
+        <div id="totalChart" data-value="<%= JSON.stringify(studentsData) %>"></div>
+    </div>
+    <script>
+        $(document).ready(() => {
+            const rows = document.querySelectorAll('.customRow')
+            rows.forEach((row) => {
+                row.addEventListener('click', () => {
+                    const nextData = row.nextElementSibling
+                    if (nextData.classList.contains('data')) {
+                        nextData.classList.toggle('show')
+                    }
+                })
+            })
+            processUnifiedGraphs()
+        })
+        function processGraph(studentId){
+            var tableRow = document.getElementById(studentId)
+            var student = JSON.parse(tableRow.dataset.value)
+            var studentGrades = []
+            for(var i = 1; i <= 4; i++){
+                studentGrades.push(parseFloat(student.grades['quarter' + i].finalGrade))
+            }
+            const xData = [
+                { x: ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4'], y: studentGrades, type: 'line' }
+            ]
+            const layout = {
+                title: {
+                    text: "Student's Grade Progress Per Quarter",
+                    font: {
+                        size: 20
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Quarters',
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Grades',
+                        font: {
+                            size: 20
+                        }
+                    }
+                }
+            }
+            Plotly.newPlot('chart' + student.id, xData, layout)
+        }
+        function processUnifiedGraphs(){
+            var totalChart = document.getElementById('totalChart')
+            var studentsData = JSON.parse(totalChart.dataset.value)
+            totalChart.dataset.value = ''
+            var data = []
+            const xData = ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4']
+            for(var i = 0; i < studentsData.students.length; i++){
+                var studentGrades = []
+                var student = studentsData.students[i]
+                for(var j = 1; j <= 4; j++){
+                    studentGrades.push(parseFloat(student.grades['quarter' + j].finalGrade))
+                }
+                data.push({
+                    x: xData,
+                    y: studentGrades,
+                    name: student.lastName + ", " + student.firstName,
+                    type: 'line'
+                })
+            }
+            const layout = {
+                title: {
+                    text: "Students Progress Comparison",
+                    font: {
+                        size: 30
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Quarters',
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Grades',
+                        font: {
+                            size: 20
+                        }
+                    }
+                }
+            }
+            Plotly.newPlot('totalChart', data, layout)
+        }
+    </script>
+</body>
+</html>

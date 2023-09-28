@@ -1,0 +1,176 @@
+<div class="w-100 p-2 mb-5">
+    <div class="w-100 m-0 mb-5 mt-3 p-0 text-center">
+        <h3>Manage Students</h3>
+    </div>
+    <div class="w-100 row">
+        <div class="col-md-2">
+            <label for="idNum">ID #:</label>
+            <input type="number" class="form-control" id="idNum" name="idNum" oninput="searchStudent()">
+        </div>
+        <div class="col-md-2">
+            <label for="lName">Last Name:</label>
+            <input type="text" class="form-control" id="lName" name="lName" oninput="searchStudent()">
+        </div>
+        <div class="col-md-2">
+            <label for="fName">First Name:</label>
+            <input type="text" class="form-control" id="fName" name="fName" oninput="searchStudent()">
+        </div>
+        <div class="col-md-2">
+            <label for="mName">Middle Name:</label>
+            <input type="text" class="form-control" id="mName" name="mName" oninput="searchStudent()">
+        </div>
+        <div class="col-md-2">
+            <label for="birthDate">Birth Date:</label>
+            <input type="date" class="form-control" id="birthDate" name="birthDate">
+        </div>
+        <div class="col-md-2">
+            <label for="sex">Sex:</label>
+            <select name="sex" id="sex" class="form-control">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+    </div>
+    <div class="row w-100 m-0 p-0 mt-3">
+        <div class="col-md-3 mb-1">
+            <button class="btn btn-success btn-block" onclick="saveStudent()">Save</button>
+        </div>
+        <div class="col-md-3 mb-1">
+            <button class="btn btn-secondary btn-block" onclick="clearStudentFields()">Clear</button>
+        </div>
+        <div class="col-md-3 mb-1">
+            <button class="btn btn-info btn-block" onclick="viewRecord()">View Record</button>
+        </div>
+        <div class="col-md-3 mb-1">
+            <button class="btn btn-danger btn-block" onclick="deleteStudent()">Delete</button>
+        </div>
+    </div>
+    <div class="w-100 mt-2 mb-0 text-right">
+        <p id="resultMessage" class="m-0 p-0">0 result/s</p>
+    </div>
+    <table class="table table-hover mb-5">
+        <thead>
+            <tr>
+                <th scope="col">ID Number</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Middle Name</th>
+                <th scope="col">Birth date</th>
+                <th scope="col">Sex</th>
+            </tr>
+        </thead>
+        <tbody id="tbodyStudent">
+        </tbody>
+    </table>
+
+    <script>
+        var selectedStudentId = 0
+
+        $(() => {
+            searchStudent()
+        })
+
+        async function searchStudent() {
+            var idNumber = $('#idNum').val()
+            var lName = $('#lName').val()
+            var fName = $('#fName').val()
+            var mName = $('#mName').val()
+            $.post('/search-student', { 
+                idNumber,
+                lName,
+                fName,
+                mName
+             }).done(async(response) => {
+                populateStudentTable(await response.dataResult)
+             })
+        }
+
+        function populateStudentTable(data) {
+            var tbodyStudent = document.getElementById("tbodyStudent")
+            tbodyStudent.innerHTML = ""
+            for(var i = 0; i < data.length; i++){
+                var row = `
+                    <tr onclick="selectStudent(${ data[i].id })" style="cursor: pointer;">
+                        <td id="id_${ data[i].id }">${ data[i].id }</td>
+                        <td id="lName_${ data[i].id }">${ data[i].lastName }</td>
+                        <td id="fName_${ data[i].id }">${ data[i].firstName }</td>
+                        <td id="mName_${ data[i].id }">${ data[i].middleName }</td>
+                        <td id="birthDate_${ data[i].id }">${ data[i].birthDate }</td>
+                        <td id="sex_${ data[i].id }">${ data[i].sex }</td>
+                    </tr>
+                `
+                tbodyStudent.innerHTML += row
+            }
+            var resultMessage = document.getElementById('resultMessage')
+            resultMessage.innerHTML = "<b>" + data.length.toLocaleString() + "</b> result/s"
+        }
+
+        async function saveStudent(){
+            var id = selectedStudentId == 0 ? null : selectedStudentId
+            var lName = $('#lName').val()
+            var fName = $('#fName').val()
+            var mName = $('#mName').val()
+            var birthDate = $('#birthDate').val()
+            var sex = $('#sex').val()
+            var datas = [lName, fName, mName, birthDate, sex]
+            for(var i = 0; i < datas.length; i++){
+                if(datas[i].trim() == ""){
+                    showErrorMessageAlert("Fill up all the details!")
+                    return
+                }
+            }
+            $.post('/save-student', { id, lName, fName, mName, birthDate, sex }).done(() => {
+                clearStudentFields()
+            })
+        }
+
+        function clearStudentFields(){
+            setStudentFields(0, "", "", "", "", "Male")
+        }
+
+        function setStudentFields(id, lName, fName, mName, birthDate, sex){
+            selectedStudentId = id
+            $('#lName').val(lName)
+            $('#fName').val(fName)
+            $('#mName').val(mName)
+            $('#birthDate').val(birthDate)
+            $('#sex').val(sex)
+            searchStudent()
+        }
+
+        function selectStudent(id){
+            setStudentFields(
+                id,
+                $('#lName_' + id).text(),
+                $('#fName_' + id).text(),
+                $('#mName_' + id).text(),
+                $('#birthDate_' + id).text(),
+                $('#sex_' + id).text(),
+            )
+        }
+
+        function viewRecord(){
+            if(selectedStudentId == 0){
+                return
+            }
+            $.get('/api/get-elementary-record/' + selectedStudentId).done(async (response) => {
+                var perGradeData = await response.perGradeData
+                var studentData = await response.student
+                showGrades(perGradeData, studentData)
+            })
+        }
+
+        function deleteStudent(){
+            if(selectedStudentId == 0){
+                return
+            }
+            showYesCancelAlert("Are you sure you want to delete this student? You cannot undo once the data is deleted from the database.", async () => {
+                var id = selectedStudentId
+                $.post('/delete-student', { id }).done(() => {
+                    clearStudentFields()
+                })
+            })
+        }
+
+    </script>
+</div>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <%- include('../partials/head.ejs') %>
+    <title>Print Grade</title>
+    <style>
+        @media print {
+            @page {
+                margin: 0;
+                size: letter landscape;
+            }
+            body {
+                margin: 0;
+            }
+            
+            .custom-container {
+                position: absolute;
+                top: 75px;
+                left: 28px;
+            }
+            .custom-font {
+                font-size: x-small;
+                font-family: 'Times New Roman';
+            }
+            .custom-border {
+                border: 2px solid black;
+            }
+            .subject {
+                width: 119px;
+            }
+            .grade {
+                width: 37px;
+                text-align: center;
+            }
+            .fGrade {
+                width: 74px;
+                text-align: center;
+            }
+            .remarks {
+                width: 97px;
+            }
+            .empty-row {
+                width: 341px;
+            }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-container">
+        <table>
+            <tbody>
+                <% for( let i = 0; i < data.subjects.length; i++ ) { %>
+                    <tr>
+                        <td class="subject custom-font custom-border"><%= data.subjects[i].name %></td>
+                        <td class="grade custom-font custom-border"><%= data.subjects[i]['quarter1'] %></td>
+                        <td class="grade custom-font custom-border"><%= data.subjects[i]['quarter2'] %></td>
+                        <td class="grade custom-font custom-border"><%= data.subjects[i]['quarter3'] %></td>
+                        <td class="grade custom-font custom-border"><%= data.subjects[i]['quarter4'] %></td>
+                        <td class="fGrade custom-font custom-border"><%= data.subjects[i].final %></td>
+                        <td class="remarks custom-border"></td>
+                    </tr>
+                <% } %>
+                <!-- Constant -->
+                <tr>
+                    <td class="subject custom-font custom-border">General Average</td>
+                    <td class="grade custom-font custom-border"></td>
+                    <td class="grade custom-font custom-border"></td>
+                    <td class="grade custom-font custom-border"></td>
+                    <td class="grade custom-font custom-border"></td>
+                    <td class="fGrade custom-font custom-border">
+                        <%= data.final %>
+                    </td>
+                    <td class="remarks custom-border"></td>
+                </tr>
+                <tr><td colspan="7" class="custom-border custom-font">&nbsp;</td></tr>
+                <tr><td colspan="7" class="custom-border custom-font">Grading System Used: <u>Averaging</u></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <img src="/images/Inside.jpg" alt="Grade Card Image" width="900px">
+
+    <script>
+        window.print()
+        window.addEventListener('afterprint', function() {
+            window.history.back()
+        })
+    </script>
+</body>
+</html>

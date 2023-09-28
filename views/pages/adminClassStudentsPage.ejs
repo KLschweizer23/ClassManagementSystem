@@ -1,0 +1,106 @@
+<!-- 
+
+This is Admin Class Page Template for admin
+to modify the subjects and subject teacher in each class
+
+-->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- This includes the partials which are different links and sources -->
+        <%- include('../partials/head') %>
+        <!-- This is only in the admin, a custom api to display list of  -->
+        <script src="/js/alertAPI.js"></script>
+        <script src="/js/studentAPI.js"></script>
+        <title>Admin Class Students Page</title>
+    </head>
+    <body id="classStudentBody" data-id="<%= classId %>">
+        <div class="w-100 p-2">
+            <a href="/admin" class="btn btn-secondary my-2">Go Back</a>
+            <div class="w-100 m-0 mb-5 mt-3 p-0 text-center">
+                <h3>Manage Class - Students</h3>
+            </div>
+            <div class="container">
+                <div class="w-100 row">
+                    <div class="col-md-6">
+                        <label for="student">Student:</label>
+                        <input type="text" class="form-control" id="student" name="student" disabled>
+                    </div>
+                    <div class="col-md-6" style="display: flex; flex-direction: column;">
+                        <button class="btn btn-outline-primary mb-1" onclick="showStudents('student')">Show Students</button>
+                        <button class="btn btn-success mb-1" onclick="assignStudent()">Assign Student</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table class="table table-hover w-75 mx-auto"> 
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">ID Number</th>
+                    <th scope="col">Student Name</th>
+                    <th scope="col">Sex</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyClassStudent">
+            </tbody>
+        </table>
+        <script>
+            $(() => {
+                getClassStudents()
+            })
+
+            async function getClassStudents(){
+                var classId = document.getElementById('classStudentBody').dataset.id
+                $.post('/get-class-student/' + classId).done(async (response) => {
+                    populateClassStudentTable(await response.dataResult)
+                })
+            }
+
+            function populateClassStudentTable(data){
+                var tbodyClassStudent = document.getElementById('tbodyClassStudent')
+                tbodyClassStudent.innerHTML = ''
+                for(var i = 0; i < data.length; i++){
+                    var row = `
+                        <tr>
+                            <td>${ i + 1 }</td>
+                            <td>${ data[i].id }</td>
+                            <td>${ data[i].lastName + ", " + data[i].firstName }</td>
+                            <td>${ data[i].sex }</td>
+                            <td><button class="btn btn-danger" onclick="unassignStudent(${ data[i].id })">Unassign</button></td>
+                        </tr>
+                    `
+                    tbodyClassStudent.innerHTML += row
+                }
+            }
+
+            async function assignStudent(){
+                var student = $('#student').val()
+                var classId = document.getElementById('classStudentBody').dataset.id
+                if(student.trim() == ""){
+                    showErrorMessageAlert("Select a student!")
+                    return
+                }
+                $.post('/assign-student/' + classId, { student }).done(async () => {
+                    getClassStudents()
+                    clearStudentField()
+                })
+            }
+
+            async function unassignStudent(studentId){
+                var classId = document.getElementById('classStudentBody').dataset.id
+                showYesCancelAlert("Are you sure you want to unassign this student to this class?", async () => {
+                    $.post('/unassign-student/' + classId, { studentId }).done(() => {
+                        getClassStudents()
+                    })
+                })
+            }
+
+            async function clearStudentField(){
+                $('#student').val("")
+            }
+
+        </script>
+    </body>
+</html>

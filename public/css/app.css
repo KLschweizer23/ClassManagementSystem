@@ -1,0 +1,44 @@
+.body{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+}
+
+.center-items{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.center-items-vertical{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.system-title {
+    color: white;
+    align-items: center;
+    margin-top: 40px;
+}
+
+.admin-panel{
+    width: 80%;
+}
+
+.text-link {
+    width: fit-content;
+}
+
+.text-link:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .admin-panel{
+        width: 100%;
+    }
+}

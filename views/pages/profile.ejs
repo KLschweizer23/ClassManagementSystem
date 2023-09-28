@@ -1,0 +1,94 @@
+<!-- 
+
+    This is the Profile Page to display the profile then change password and logout function
+
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- This includes the partials which are different links and sources -->
+    <%- include('../partials/head') %>
+    <title>Profile</title>
+</head>
+<body>
+    <!-- This includes the navigation bar -->
+    <%- include('../partials/navbar') %>
+    <!-- Below using the teacher data send from the back end to front end -->
+    <div class="w-75 m-0 p-0 mt-3 py-5 mx-auto" style="border-radius: 25px; background-color: rgb(240, 247, 255);">
+        <div class="w-100 m-0 mb-5 pt-3 p-0 text-center">
+            <h1>My Profile</h1>
+        </div>
+        <div class="w-100 m-0 p-0 px-5 row text-center">
+            <div class="col-md-4">
+                <h2>Name:</h2>
+                <h3><%= teacher.name %></h3>
+            </div>
+            <div class="col-md-4">
+                <h2>Email</h2>
+                <h3><%= teacher.email %></h3>
+            </div>
+            <div class="col-md-4">
+                <h2>Password</h2>
+                <!-- This is to display all the letters in the passwords as a bullet character -->
+                <h3>
+                    <% for( let i = 0; i < teacher.password.length; i++ ) { %>
+                        <%= "•" %>
+                    <% } %>
+                </h3>
+            </div>
+            <div class="col-12 text-center mt-3">
+                <form action="/logout?_method=DELETE" method="post">
+                    <button type="submit" class="btn btn-danger">Logout</button>
+                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#passwordModal">Change Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="/change-password" method="post">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="passwordModalLabel">Change Password</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body row">
+                        <div class="col-md-12 form-group">
+                            <label for="subject">New Password:</label>
+                            <input type="password" class="form-control" id="pass" onkeyup="checkPassword()">
+                        </div>
+                        <div class="col-md-12 form-group">
+                            <label for="subject">Re-type Password:</label>
+                            <input type="password" class="form-control" id="rePass" name="password" onkeyup="checkPassword()">
+                        </div>
+                        <div class="col-md-12 form-group">
+                            <p id="info" style="color:red"><i>Password doesn't match!</i></p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button id="save" type="submit" class="btn btn-success" disabled>Save changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // This function is to check if both passwords inputted is the same, it will enable the save button if same
+        function checkPassword(){
+            var pass1 = document.getElementById('pass')
+            var pass2 = document.getElementById('rePass')
+            var info = document.getElementById('info')
+            var save = document.getElementById('save')
+            var match = pass1.value == pass2.value && !(pass1.value == '' && pass2.value == '')
+
+            info.style.color = match ? "green" : "red"
+            info.innerText = match ? "Password match!" : "Password doesn't match!"
+
+            save.disabled = !match
+        }
+    </script>
+</body>
+</html>

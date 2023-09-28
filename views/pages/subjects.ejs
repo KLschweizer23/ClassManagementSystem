@@ -1,0 +1,283 @@
+<!-- 
+
+    This is the Subjects page for the teachers to determine which subjects they belong
+
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- This includes the partials which are different links and sources -->
+    <%- include('../partials/head') %>
+    <title>Subjects</title>
+</head>
+<body>
+    <!-- This includes the navigation bar -->
+    <%- include('../partials/navbar') %>
+    <!-- 
+        This check if there's a data 'relatedClasses' passed from the back end to the front end 
+        relatedClasses is an object that contains a lot of data
+        To see the data, copy this code below
+        <_%_= JSON.stringify(relatedClasses) %_>
+        NOTE: remove the underscore(_)
+    -->
+    <% if (relatedClasses) { %>
+        <div class="text-center mt-5">
+            <h2><%= relatedClasses.name %></h2>
+        </div>
+        <div class="w-100 m-0 p-0 px-3">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <!-- This part is a loop that shows the list of related class as a tab -->
+                <% for( let i = 0; i < relatedClasses.length; i++ ) { %>
+                    <% var uniqueIdentifier = "c" + relatedClasses[i].id %>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link <%= i == 0 ? "active" : "" %>" id="<%= uniqueIdentifier %>-tab" data-toggle="tab" data-target="#<%= uniqueIdentifier %>" type="button" role="tab" aria-controls="<%= uniqueIdentifier %>" aria-selected="true">
+                            G<%= relatedClasses[i].grade.gradeLevel + " - " + relatedClasses[i].section %>
+                        </button>
+                    </li>
+                <% } %>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <!-- This part is a loop that shows the list of relted class which is the content of the tab -->
+                <% for( let i = 0; i < relatedClasses.length; i++ ) { %>
+                    <!-- This is a uniqueIdentifier as an ID for this content -->
+                    <% var uniqueIdentifier = "c" + relatedClasses[i].id %>
+                    <!-- This is to determine if this subject has activities, if not then show nothing -->
+                    <% var hasActivities = false %>
+                    <div class="px-2 mt-3 tab-pane fade <%= i == 0 ? "show active" : "" %>" id="<%= uniqueIdentifier %>" role="tabpanel" aria-labelledby="<%= uniqueIdentifier %>-tab">
+                        <% var thisClass = relatedClasses[i] %>
+                        <!-- This loop is to show the subjects handled by the teacher in this class -->
+                        <% for( let k = 0; k < thisClass.subjects.length; k++) { %>
+                            <hr>
+                            <div class="w-100">
+                                <div class="w-100 m-0 p-0 text-center">
+                                    <h1><%= thisClass.subjects[k].name %></h1>
+                                </div>
+                                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                    <% for( let l = 1; l <= 4; l++ ) { %>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link <%= (l == 1) ? "active" : "" %>" id="pills-<%= l %>-<%= thisClass.subjects[k].id %>-tab" data-toggle="pill" data-target="#pills-<%= l %>-<%= thisClass.subjects[k].id %>" type="button" role="tab" aria-controls="pills-<%= l %>-<%= thisClass.subjects[k].id %>" aria-selected="<%= (l == 1) ? "true" : "false" %>">Quarter <%= l %></button>
+                                        </li>
+                                    <% } %>
+                                </ul>
+                                <div class="tab-content" id="pills-tabContent">
+                                    <% for( let l = 1; l <= 4; l++ ) { %>
+                                        <div class="tab-pane fade <%= (l == 1) ? "show active" : "" %>" id="pills-<%= l %>-<%= thisClass.subjects[k].id %>" role="tabpanel" aria-labelledby="pills-<%= l %>-<%= thisClass.subjects[k].id %>-tab">
+                                            <!-- This part is to add an activity by passing to the back end the subject Id -->
+                                            <form method="POST" action="/add-activity/<%= thisClass.subjects[k].id %>/<%= l %>">
+                                                <div class="row">
+                                                    <div class="col-md-4 form-group">
+                                                        <label for="activity">Activity name:</label>
+                                                        <input type="text" class="form-control" id="activity" name="activity">
+                                                    </div>
+                                                    <div class="col-md-4 form-group">
+                                                        <label for="type">Type</label>
+                                                        <!-- This is part that shows the different types for the activity -->
+                                                        <select class="form-control" id="type" name="type">
+                                                            <% for( let j = 0; j < types.length; j++ ) { %>
+                                                                <option value="<%= types[j].id %>"><%= types[j].name.toLowerCase() == 'exam' ? types[j].name + " (One exam per quarter)" : types[j].name %></option>
+                                                            <% } %>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4 form-group">
+                                                        <label for="total">Total Items:</label>
+                                                        <input type="number" class="form-control" id="total" name="total">
+                                                    </div>
+                                                    <div class="col-md-4"></div>
+                                                    <div class="col-md-4 form-group my-auto">
+                                                        <button type="submit" class="btn btn-success btn-block">Add Activity</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <!--  -->
+                                            <!-- This table will start from the first row, that will be the used approach to achieve this desired output -->
+                                            <div class="table-responsive-lg mt-3">
+                                                <table id="table<%= thisClass.id %>_<%= thisClass.subjects[k].id %>_<%= l %>" class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">#</th>
+                                                            <th scope="col">Name</th>
+                                                            <% hasActivities = thisClass.subjects[k].activities['quarter' + l].length != 0 %>
+                                                            <!-- This part checks if there is an activity in this subject -->
+                                                            <% if (hasActivities) { %>
+                                                                <% var activities = thisClass.subjects[k].activities['quarter' + l] %>
+                                                                <!-- This part shows all the activity and shows the total items -->
+                                                                <% for( let j = 0; j < activities.length; j++) { %>
+                                                                    <th scope="col">
+                                                                        <%= activities[j].activityName %><br>
+                                                                        <p class="h6"><%= activities[j].totalItems %> Item/s total</p>
+                                                                    </th>
+                                                                <% } %>
+                                                            <% } else { %>
+                                                                <th scope="col">No Activities</th>
+                                                            <% } %>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- This iterates the students in this class -->
+                                                        <% for( let j = 0; j < thisClass.students.length; j++ ) { %>
+                                                            <% var student = thisClass.students[j] %>
+                                                            <tr>
+                                                                <td scope="row"><%= j + 1 %></td>
+                                                                <td><%= student.lastName + ", " + student.firstName %></td>
+                                                                <% hasActivities = thisClass.subjects[k].activities['quarter' + l].length != 0 %>
+                                                                <% if (hasActivities) { %>
+                                                                    <% var activities = thisClass.subjects[k].activities['quarter' + l] %>
+                                                                    <%= //This part process the data for the student's information with every activity %>
+                                                                    <% for( let j = 0; j < activities.length; j++) { %>
+                                                                        <% var hasValue = false %>
+                                                                        <td>
+                                                                            <%= //This part iterates to every student's, if there's an existing score then put the score in the input %>
+                                                                            <% for( let k = 0; k < student.scores.length; k++ ) { %>
+                                                                                <% if (student.scores[k].activityId == activities[j].id) { %>
+                                                                                    <input type="number" name="<%= student.id %>" id="<%= student.id + "_" + activities[j].id %>" value="<%= student.scores[k].score %>" data-total="<%= activities[j].totalItems %>" oninput="checkScore(id)">
+                                                                                    <div id="alert_<%= student.id + "_" + activities[j].id %>" class="alert alert-danger mt-2" role="alert" style="display: none; width: 200px;"></div>
+                                                                                    <%= //This means there is a score for this student in this activity %>
+                                                                                    <% hasValue = true %>
+                                                                                <% } %>
+                                                                            <% } %>
+                                                                            <%= //If there's no score then just input an empty input %>
+                                                                            <% if (!hasValue) { %>
+                                                                                <input type="number" name="<%= student.id %>" id="<%= student.id + "_" + activities[j].id %>" value="" data-total="<%= activities[j].totalItems %>" oninput="checkScore(id)">
+                                                                                <div id="alert_<%= student.id + "_" + activities[j].id %>" class="alert alert-danger mt-2" role="alert" style="display: none;"></div>
+                                                                            <% } %>
+                                                                        </td>
+                                                                    <% } %>
+                                                                <% } else { %>
+                                                                    <td></td>
+                                                                <% } %>
+                                                            </tr>
+                                                        <% } %>
+                                                        <!-- This part will add another row to add a button that saves or remove the activity -->
+                                                        <tr>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <% hasActivities = thisClass.subjects[k].activities['quarter' + l].length != 0 %>
+                                                            <% if (hasActivities) { %>
+                                                                <% var activities = thisClass.subjects[k].activities['quarter' + l] %>
+                                                                <% for( let j = 0; j < activities.length; j++) { %>
+                                                                    <td>
+                                                                        <button type="button" class="btn btn-success" name="table<%= thisClass.id %>_<%= thisClass.subjects[k].id %>_<%= l %>" id="b<%= activities[j].id %>" onclick="saveScores(name, id)">Save Activity Scores</button><br>
+                                                                        <button class="btn btn-danger ml-2 mt-1" type="button" id="a<%= activities[j].id %>" onclick="removeActivity(id)">Remove Activity</button>
+                                                                    </td>
+                                                                <% } %>
+                                                            <% } else { %>
+                                                                <td></td>
+                                                            <% } %>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="m-0 p-0 mt-5 pt-5 text-center w-100">
+            <h1>No Assigned Subjects</h1>
+        </div>
+    <% } %>
+    <script>
+        function checkScore(id){
+            var input = document.getElementById(id)
+            var error = document.getElementById("alert_" + id)
+            var total = input.dataset.total
+            var value = input.value
+            if(Number(value) > Number(total)){
+                error.style.display = "block"
+                error.innerHTML = "Score is greater than the Total Items! The score will be automatically " + total 
+            }else{
+                error.style.display = "none"
+                error.innerHTML = ""
+            }
+        }
+        // This function is to make a request to the backend to delete the activity
+        async function removeActivity(activityId){
+            var id = activityId.substring(1)
+            $.post('/delete-activity/' + id).done(async () => {
+                window.location.reload()
+            })
+        }
+        
+        // This function is to save the scores in an activity
+        async function saveScores(tableId, activityId){
+            var table = document.getElementById(tableId)
+            var newActivityId = activityId.substring(1)
+            
+            // It gets all the input the filter 
+            var inputs = table.querySelectorAll('input')
+
+            // Filter all the inputs that only return the inputs on the specified activityId
+            var newInputs = await filterInputs(inputs, newActivityId)
+
+            // This gets the saved scores in the database in this activity to check if the score exist and the same score
+            var savedScores = await getSavedScores(newActivityId)
+
+            // This function will compare the scores
+            compareScores(newInputs, savedScores.scores, newActivityId)
+        }
+
+        async function filterInputs(inputs, activityId){
+            var finalInputs = []
+            for(var i = 0; i < inputs.length; i++){
+                var modifiedId = inputs[i].id.split("_")[1]
+                if(modifiedId == activityId && inputs[i].value != ""){
+                    finalInputs.push(inputs[i])
+                }
+            }
+            return finalInputs
+        }
+
+        async function getSavedScores(activityId){
+            var data = await $.post('/api-get-scores/' + activityId, async (response) => {
+                return await response
+            })
+            return data
+        }
+
+        // The idea is to check if the inputted score is the same in the database
+        // If true then don't save it, if not the same then make a request to save to the backend and pass the data
+        async function compareScores(studentInputs, savedScores, activityId){
+            if(studentInputs.length == 0){
+                return
+            }
+            var scoresToSave = []
+
+            if(savedScores.length == 0){
+                for(var i = 0; i < studentInputs.length; i++){
+                    var currentScore = {
+                        score: Number(studentInputs[i].value),
+                        activityId: Number(activityId),
+                        studentId: Number(studentInputs[i].name)
+                    }
+                    scoresToSave.push(currentScore)
+                }
+            }else{
+                for(var i = 0; i < savedScores.length; i++){
+                    for(var j = 0; j < studentInputs.length; j++){
+                        if(Number(studentInputs[j].value) != Number(savedScores[i].score)){
+                            var currentScore = {
+                                score: Number(studentInputs[j].value),
+                                activityId: Number(activityId),
+                                studentId: Number(studentInputs[j].name)
+                            }
+                            scoresToSave.push(currentScore)
+                        }
+                    }
+                }
+            }
+
+            if(scoresToSave.length != 0){
+                $.post('/add-scores', { scores: scoresToSave }, (response) => {
+                    window.location.href = '/subjects'
+                })
+            }
+        }
+
+    </script>
+</body>
+</html>

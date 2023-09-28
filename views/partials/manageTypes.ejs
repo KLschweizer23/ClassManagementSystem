@@ -1,0 +1,54 @@
+<!-- This is the partial to manage types -->
+<div class="w-100 p-2">
+    <div class="w-100 m-0 mb-5 mt-3 p-0 text-center">
+        <h3>Manage Types</h3>
+    </div>
+    <div class="m-0 mb-2 p-0">
+        <div class="container">
+            <form method="POST" action="/add-type">
+                <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label for="name">Type Name:</label>
+                        <input type="text" class="form-control" id="name" name="name">
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="percentage">Type Percentage:</label>
+                        <input type="number" class="form-control" id="percentage" name="percentage">
+                    </div>
+                    <div class="col-md-4 form-group my-auto">
+                        <button type="submit" class="btn btn-success btn-block">Add Type</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <table class="table table-hover"> 
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Type Name</th>
+            <th scope="col">Percentage</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+            <!-- This is to iterate the types saved in the database -->
+            <% for( let i = 0; i < types.length; i++ ) { %>
+                <tr>
+                    <th scope="row"><%= i + 1 %></th>
+                    <td><%= types[i].name %></td>
+                    <td><%= types[i].percentage %>%</td>
+                    <td><button type="button" class="btn btn-danger" id="<%= types[i].id %>" onclick="deleteType(id)">Delete</button></td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <script>
+        // This function is to delete the types in the backend by sending a request
+        async function deleteType(id){
+            $.post('/delete-type/' + id).done(async () => {
+                window.location.reload()
+            })
+        }
+    </script>
+</div>

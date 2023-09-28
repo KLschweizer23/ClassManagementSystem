@@ -1,0 +1,207 @@
+<!-- 
+
+    This is Dashboard Page for every teacher
+    to modify their advisory
+
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- This includes the partials which are different link and sources -->
+    <%- include('../partials/head') %>
+    <script src="/js/schoolYearAPI.js"></script>
+    <title>Dashboard</title>
+</head>
+<body>
+    <!-- This includes the navigation bar -->
+    <%- include('../partials/navbar') %>
+    <!-- 
+        advisory is a data from the back end passed to front end
+
+        advisory is an object that contains a lot of data
+        To see the data, copy this code below
+        <_%_= JSON.stringify(advisory) %_>
+        NOTE: remove the underscore(_)
+
+        If advisory exist, then it means this teacher has an advisory then load the class and students and more
+        If not then just show "No advisory"
+    -->
+
+    <% if (advisory) { %>
+        <div class="text-center mt-5">
+            <h2><%= "G" + advisory.grade.gradeLevel + " - " + advisory.section %></h2>
+            <div class="mt-2" style="display: inline;">
+                <h5 id="schoolYearLink" class="mx-auto text-link" onclick="showModal('schoolYearLink', false)" data-id="<%= sy.id %>"><%= sy.title %></h5>
+            </div>
+        </div>
+        <div class="w-100 px-5">
+            <div class="w-100 mb-2 text-right">
+                <div class="m-0 my-3 p-0 text-left">
+                    <a class="btn btn-primary" href="/dashboard/<%= sy.id %>/class-grades">Check Grade Prediction</a>
+                </div>
+            </div>
+            <div class="table-responsive-lg">
+                <table id="myTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col"><input type="checkbox" id="0"></th>
+                            <th scope="col">#</th>
+                            <th scope="col" class="sortable" data-column="Name">Name</th>
+                            <% for( let i = 0; i < grades.subjects.length; i++ ) { %>
+                                <th scope="col" class="sortable" data-column="<%= grades.subjects[i].name %>"><%= grades.subjects[i].name %><br><p class="h6"><%= sy.isCurrent ? grades.subjects[i].subjectTeacher.name : '' %></p></th>
+                            <% } %>
+                            <th scope="col" class="sortable" data-column="FinalGrade">Grade</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for( let i = 0; i < advisory.students.length; i++ ) { %>
+                            <tr>
+                                <td><input type="checkbox" name="checkbox" id="<%= advisory.students[i].id %>"></td>
+                                <th scope="row"><%= i + 1 %></th>
+                                <td><%= advisory.students[i].lastName + ', ' + advisory.students[i].firstName %></td>
+                                <% for( let j = 0; j < advisory.subjects.length; j++ ) { %>
+                                    <td>
+                                        <% var grade = 0.0 %>
+                                        <% for( let k = 1; k <= 4; k++ ) { %>
+                                            <% grade += parseFloat(grades['quarter' + k][advisory.students[i].id][advisory.subjects[j].id]); %>
+                                        <% } %>
+                                        <%= (grade / 4).toFixed(2) %>%
+                                    </td>
+                                <% } %>
+                                <% var finalGrade = 0.0 %>
+                                <% for( let k = 1; k <= 4; k++ ) { %>
+                                    <% finalGrade += parseFloat(grades['quarter' + k][advisory.students[i].id].finalGrade) %>
+                                <% } %>
+                                <td><%= (finalGrade / 4).toFixed(2) %>%</td>
+                                <td><a href="/card-outside/<%= advisory.students[i].id %>" class="btn btn-outline-primary">Print Card 1</a><br><a href="/card-inside/<%= advisory.students[i].id %>" class="btn btn-outline-primary">Print Card 2</a></td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <style>
+            .sortable {
+                cursor: pointer;
+            }
+        </style>
+        <script>
+            let currentSortOrder = "asc"; // Initial sorting order
+
+            // Function to sort the table rows
+            function sortTable(columnIndex) {
+                const table = document.getElementById("myTable")
+                const tbody = table.getElementsByTagName("tbody")[0]
+                const rows = Array.from(tbody.getElementsByTagName("tr"))
+                rows.sort((a, b) => {
+                    const cellA = a.getElementsByTagName("td")[columnIndex + 1].innerText
+                    const cellB = b.getElementsByTagName("td")[columnIndex + 1].innerText
+                    // Sort based on the current sorting order
+                    if (currentSortOrder === "asc") {
+                        return cellA.localeCompare(cellB)
+                    } else {
+                        return cellB.localeCompare(cellA)
+                    }
+                })
+
+                // Clear the table body
+                while (tbody.firstChild) {
+                    tbody.removeChild(tbody.firstChild)
+                }
+
+                // Append sorted rows back to the table body
+                for (const row of rows) {
+                    tbody.appendChild(row)
+                }
+
+                // Toggle the sorting order for the next click
+                currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc"
+            }
+
+            // Attach event listeners to each sortable header
+                const headers = document.querySelectorAll(".sortable")
+                headers.forEach((header, index) => {
+                header.addEventListener("click", () => sortTable(index))
+            })
+        </script>
+        <!-- This is the modal to add the student -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <form action="/add-student/<%= sy.id %>" method="post">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Add a new Student</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="firstName">First Name:</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName">
+                                </div>
+                                <div class="col-12 form-group">
+                                    <label for="middleName">Middle Name:</label>
+                                    <input type="text" class="form-control" id="middleName" name="middleName">
+                                </div>
+                                <div class="col-12 form-group">
+                                    <label for="lastName">Last Name:</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName">
+                                </div>
+                                <div class="col-12 form-group">
+                                    <label for="selectSex">Sex</label>
+                                    <select class="form-control" id="selectSex" name="sex">
+                                        <option>Male</option>
+                                        <option>Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Add Student</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    <% } else { %>
+        <!-- If advisory has no value -->
+        <div class="m-0 p-0 mt-5 pt-5 text-center w-100">
+            <h1>No Assigned Advisory</h1>
+        </div>
+    <% } %>
+    <script>
+        var allCheck = document.getElementById('0')
+        allCheck.addEventListener('change', () => {
+            changeAllCheckbox(allCheck.checked)
+        })
+
+        function changeAllCheckbox(value){
+            var checkboxes = document.getElementsByName('checkbox')
+            for(var i = 0; i < checkboxes.length; i++){
+                checkboxes[i].checked = value
+            }
+        }
+
+        async function deleteStudent(){
+            var checkboxes = document.getElementsByName('checkbox')
+            var studentsIds = []
+            for(var i = 0; i < checkboxes.length; i++){
+                var checkbox = checkboxes[i]
+                if(checkbox.checked){
+                    var id = Number(checkbox.id)
+                    studentsIds.push(id)
+                }
+            }
+            if(studentsIds.length != 0){
+                $.post('/delete-students', {studentsIds}).done(() => {
+                    window.location.reload()
+                })
+            }
+        }
+    </script>
+</body>
+</html>

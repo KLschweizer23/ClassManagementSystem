@@ -1,0 +1,135 @@
+<!-- 
+
+    This is Admin Class Page Template for admin
+    to modify the subjects and subject teacher in each class
+
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- This includes the partials which are different links and sources -->
+    <%- include('../partials/head') %>
+    <!-- This is only in the admin, a custom api to display list of  -->
+    <script src="/js/teacherAPI.js"></script>
+    <script src="/js/alertAPI.js"></script>
+    <title>Admin Class Page</title>
+</head>
+<body id="classBody" data-id="<%= classId %>">
+    <div class="w-100 p-2">
+        <a href="/admin" class="btn btn-secondary my-2">Go Back</a>
+        <div class="w-100 m-0 mb-5 mt-3 p-0 text-center">
+            <h3>Manage Class</h3>
+        </div>
+        <div class="m-0 mb-2 p-0">
+            <div class="container">
+                <!-- classId is a data from the back end passed to the front end -->
+                <!-- <form id="addingSubjectForm" method="POST" action="/add-subject/<%= classId %>"> -->
+                <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label for="subject">Subject name:</label>
+                        <input type="text" class="form-control" id="subject" name="subject" oninput="searchSubjects()">
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="teacher">Subject Teacher:</label>
+                        <input type="text" class="form-control" id="teacher" name="teacher" disabled>
+                    </div>
+                    <div class="col-md-4 form-group my-auto">
+                        <!-- getTeacher() is from the teacherAPI.js to generate the list of teachers -->
+                        <!-- First parameter is the ID of the input on where the clicked teacher will display -->
+                        <!-- Second parameter is for the api to determine if to only show teachers without advisory or not -->
+                        <button class="btn btn-primary btn-block" onclick="getTeachers('teacher', true)">Select Teacher</button>
+                        <button class="btn btn-success btn-block" onclick="addSubject()">Add Subject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table class="table table-hover w-75 mx-auto"> 
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Subject Name</th>
+                    <th scope="col">Subject Teacher</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <!-- 
+
+                classroom is a data from the back end passed to the front end
+                classroom is an object that contains a lot of data
+                To see the data, copy this code below
+                <_%_= JSON.stringify(classroom) %_>
+                NOTE: remove the underscore (_)
+
+                Below contains a for loop to iterate every subject of this classroom
+                To display the contents of every subjects in a classroom into the table
+
+             -->
+            <tbody id="tbodySubject">
+            </tbody>
+        </table>
+    </div>
+    <script>
+
+        $(() => {
+            searchSubjects()
+        })
+
+        async function searchSubjects(){
+            var classId = document.getElementById('classBody').dataset.id
+            var subject = $('#subject').val()
+            $.post('/search-subject/' + classId, { subject }).done(async (response) => {
+                populateSubjectTable(await response.dataResult)
+            })
+        }
+
+        function populateSubjectTable(data){
+            var tbodySubject = document.getElementById('tbodySubject')
+            tbodySubject.innerHTML = ""
+            for(var i = 0; i < data.length; i++){
+                var row = `
+                    <tr>
+                        <td>${ i + 1 }</td>
+                        <td>${ data[i].name }</td>
+                        <td>${ data[i].subjectTeacher.name }</td>
+                        <td><button class="btn btn-danger" onclick="deleteSubject(${ data[i].id })">Remove</button></td>
+                    </tr>
+                `
+                tbodySubject.innerHTML += row
+            }
+        }
+
+        async function addSubject(){
+            document.getElementById('teacher').disabled = false
+
+            var classId = document.getElementById('classBody').dataset.id
+            var subject = $('#subject').val()
+            var teacher = $('#teacher').val()
+
+            if(subject.trim() == "" || teacher.trim() == ""){
+                showErrorMessageAlert("Fill up all the details!")
+                document.getElementById('teacher').disabled = true
+                return
+            }
+            $.post('/add-subject/' + classId, { subject, teacher }).done(() => {
+                document.getElementById('teacher').disabled = true
+                clearSubjectFields()
+            })
+        }
+
+        function clearSubjectFields(){
+            $('#subject').val("")
+            $('#teacher').val("")
+            searchSubjects()
+        }
+
+        // This functions sends a request to the backend to delete the subject using a subjectId
+        async function deleteSubject(id){
+            showYesCancelAlert("Are you sure you want to remove this subject? You cannot undo once the data is deleted from the database.", async () => {
+                $.post('/delete-subject/' + id).done(async () => {
+                    searchSubjects()
+                })
+            })
+        }
+    </script>
+</body>
+</html>

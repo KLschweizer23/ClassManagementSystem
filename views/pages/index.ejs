@@ -1,0 +1,47 @@
+<!-- 
+
+    This is the Index Page, the first page to display that is the login part of the website
+
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- This includes the partials which are different links and sources -->
+    <%- include('../partials/head') %>
+    <title>Welcome!</title>
+</head>
+<body>
+    <div class="body row">
+        <div class="center-items col-12 col-md-6 bg-primary w-100 text-center">
+            <div class="m-0 p-0 w-100 text-center">
+                <img class="w-50" src="/images/logo.png" alt="Assumpta Logo">
+                <h3 class="system-title">Assumpta School of Tagum</h3>
+            </div>
+        </div>
+        <div class="center-items col-12 col-md-6 w-100">
+            <div class="w-100">
+                <div class="text-center w-100">
+                    <h1 class="mb-4">Login</h1>
+                </div>
+                <div class="w-75 mx-auto">
+                    <!-- This is where the message will display if there's an error, this is from the backend using the Passport Module -->
+                    <% if (messages.error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= messages.error %>
+                        </div>
+                    <% } %>
+                    <form action="/login" method="post">
+                        <div class="form-group">
+                            <input id="email" type="text" class="form-control" name="email" placeholder="Email">
+                        </div>
+                        <div class="form-group">
+                            <input id="password" type="password" class="form-control" name="password" placeholder="Password">
+                        </div>
+                        <button id="login" type="submit" class="btn btn-primary btn-block">Log in</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

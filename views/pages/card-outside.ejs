@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <%- include('../partials/head.ejs') %>
+    <title>Print Grade</title>
+    <style>
+        @media print {
+            @page {
+                margin: 0;
+                size: letter landscape;
+            }
+            body {
+                margin: 0;
+            }
+            
+            .custom-container {
+                position: absolute;
+                top: 75px;
+                left: 28px;
+            }
+            .custom-font {
+                font-size: medium;
+                font-family: 'Times New Roman';
+            }
+            p {
+                position: relative;
+                top: 560px;
+                left: 620px;
+            }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-container">
+        <p class="custom-font"><%= student.lastName.substring(0, 1).toUpperCase() + student.lastName.substring(1).toLowerCase() %>, <%= student.firstName.substring(0, 1).toUpperCase() + student.firstName.substring(1).toLowerCase() %> <%= student.middleName.substring(0, 1).toUpperCase() %>.</p>
+    </div>
+
+    <img src="/images/Outside.jpg" alt="Grade Card Image" width="900px">
+
+    <script>
+        window.print()
+        window.addEventListener('afterprint', function() {
+            window.history.back()
+        })
+    </script>
+</body>
+</html>

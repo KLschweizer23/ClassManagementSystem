@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Teacher {
+  id              Int       @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  password        String
+  class           Class?    
+  subjects        Subject[]
+}
+
+model Grade {
+  id              Int       @id @default(autoincrement())
+  gradeLevel      String
+  classes         Class[]
+}
+
+model Class {
+  id              Int               @id @default(autoincrement())
+  section         String
+  gradeId         Int
+  grade           Grade             @relation(fields: [gradeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  adviser         Teacher?          @relation(fields: [adviserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  adviserId       Int?              @unique
+  subjects        Subject[]
+  students        Student[]
+  schoolRecords   SchoolRecord[]
+}
+
+model Student {
+  id              Int             @id @default(autoincrement())
+  lastName        String
+  firstName       String
+  middleName      String
+  sex             String
+  birthDate       String
+  classId         Int?
+  class           Class?          @relation(fields: [classId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  scores          Score[]
+  schoolRecords   SchoolRecord[]
+}
+
+model Subject {
+  id               Int            @id @default(autoincrement())
+  name             String
+  subjectTeacher   Teacher        @relation(fields: [subjectTeacherId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subjectTeacherId Int
+  class            Class          @relation(fields: [classId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  classId          Int
+  activities       Activity[]
+}
+
+model Type {
+  id              Int       @id @default(autoincrement())
+  name            String
+  percentage      Float
+  activities      Activity[]
+}
+
+model Activity {
+  id              Int       @id @default(autoincrement())
+  activityName    String
+  totalItems      Int
+  quarter         Int
+  subject         Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subjectId       Int
+  type            Type      @relation(fields: [typeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  typeId          Int
+  scores          Score[]
+  schoolYearId    Int
+  schoolYear      SchoolYear @relation(fields: [schoolYearId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Score {
+  id              Int       @id @default(autoincrement())
+  score           Int       
+  activity        Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  activityId      Int
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  studentId       Int
+}
+
+model SchoolYear {
+  id              Int       @id @default(autoincrement())
+  title           String
+  isCurrent       Boolean
+  activities      Activity[]
+  schoolRecords   SchoolRecord[]
+}
+
+model SchoolRecord {
+  id              Int       @id @default(autoincrement())
+  schoolYearId    Int
+  classId         Int
+  studentId       Int
+  schoolYear      SchoolYear @relation(fields: [schoolYearId], references: [id])
+  class           Class     @relation(fields: [classId], references: [id])
+  student         Student   @relation(fields: [studentId], references: [id])
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}

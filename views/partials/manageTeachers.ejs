@@ -1,0 +1,96 @@
+<!-- This is the partial to manage teachers -->
+<div class="w-100 p-2">
+    <div class="w-100 m-0 mb-5 mt-3 p-0 text-center">
+        <h3>Manage Teachers</h3>
+    </div>
+    <div class="m-0 mb-2 p-0">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 form-group">
+                    <label for="email">Email:</label>
+                    <input type="text" class="form-control" id="email" name="email" oninput="searchTeacher()">
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="fullName">Full Name:</label>
+                    <input type="text" class="form-control" id="fullName" name="fullName" oninput="searchTeacher()">
+                </div>
+                <div class="col-md-4 form-group my-auto">
+                    <button class="btn btn-success btn-block" onclick="addTeacher()">Add Teacher</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <table class="table table-hover"> 
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Email</th>
+            <th scope="col">Full Name</th>
+            <th scope="col">Password</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyTeacher">
+            
+        </tbody>
+    </table>
+    <script>
+        
+        $(() => {
+            searchTeacher()
+        })
+
+        function deleteTeacher(id){
+            showYesCancelAlert("Are you sure you want to remove this teacher? You cannot undo once the data is deleted from the database.", async () => {
+                    $.post('/delete-teacher/' + id).done(() => {
+                        clearTeacherFields()
+                    })
+                }
+            )
+        }
+
+        async function searchTeacher() {
+            var email = $('#email').val()
+            var fullName = $('#fullName').val()
+            $.post('/search-teacher', { email, fullName }).done(async (response) => {
+                populateTeacherTable(await response.dataResult)
+            })
+        }
+
+        function populateTeacherTable(data){
+            var tbodyTeacher = document.getElementById('tbodyTeacher')
+            tbodyTeacher.innerHTML = ""
+            for(var i = 0; i < data.length; i++){
+                var row = `
+                    <tr>
+                        <td>${ i + 1 }</td>
+                        <td>${ data[i].email }</td>
+                        <td>${ data[i].name }</td>
+                        <td>${ data[i].password }</td>
+                        <td><button class="btn btn-danger" onclick="deleteTeacher(${ data[i].id })">Remove</button></td>
+                    </tr>
+                `
+                tbodyTeacher.innerHTML += row
+            }
+        }
+
+        async function addTeacher(){
+            var email = $('#email').val()
+            var fullName = $('#fullName').val()
+            if(email.trim() == "" || fullName.trim() == ""){
+                showErrorMessageAlert("Fill up all the details!")
+                return
+            }
+            $.post('/add-teacher', { email, fullName }).done(() => {
+                clearTeacherFields()
+            })
+        }
+
+        function clearTeacherFields(){
+            $('#email').val("")
+            $('#fullName').val("")
+            searchTeacher()
+        }
+
+    </script>
+</div>
